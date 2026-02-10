@@ -1,70 +1,88 @@
 % DEMO IDENTIFICATION 
 % Author: C. Poussot-Vassal [MOR Digital Systems / Onera]
 % Date  : March 2022 (creation)
+%         February 2026 (modification)
 % 
 % Description
 % Demonstration script for data-driven dynamical model identification using 
 % either
-%  * the "ident" toolbox embedded in the Matlab Identification Toolbox, or 
-%  * the Hankel driven 
-% This script is a rather simple one and modifications may be applied by 
-% users. Still, it provides a first shot for it, but does not prevent for 
-% additional reading and thinking.
 % 
 % Note
 % The script uses the "+insa" matlab package.
-% 
-% setenv('MDSHOME','/Users/charles/Documents/MDS')
-% addpath('/Users/charles/Documents/MDS/mdspack/API/matlab/')
-% addpath('/Users/charles/Documents/MDS/mdspack/build/OSX/lib')
-
+%
+clearvars, close all, clc
+set(groot,'DefaultFigurePosition', [300 100 1000 600]);
+set(groot,'defaultlinelinewidth',2)
+set(groot,'defaultlinemarkersize',14)
+set(groot,'defaultaxesfontsize',18)
+list_factory = fieldnames(get(groot,'factory')); index_interpreter = find(contains(list_factory,'Interpreter')); for iloe1 = 1:length(index_interpreter); set(groot, strrep(list_factory{index_interpreter(iloe1)},'factory','default'),'latex'); end
 clear all, close all, clc;
-% >> Graphic settings
-insa.initGraphics
+
+%%% INSAPACK & LF
+addpath('/Users/charles/Documents/GIT/insapack')
+addpath('/Users/charles/Documents/GIT/lf')
+
+%%% LOAD DATA
 load('signals')
+sig     = sig2;
+Ts      = sig.Ts;
+t       = sig.t;
+u       = sig.u;
+y       = sig.y;
+yn      = sig.yn;
+ytrue   = lsim(G,u,t);
+w       = logspace(-2,log10(1/Ts),200)*2*pi;
+Gtrue   = freqresp(G,w);
 
-% Identify using 'ident' on either (u,y) or (u,yn) couples
-t1  = t1(:); u1  = u1(:); y1  = y1n(:); dt1 = t1(2)-t1(1);
-t2  = t2(:); u2  = u2(:); y2  = y2n(:); dt2 = t2(2)-t2(1);
-t3  = t3(:); u3  = u3(:); y3  = y3n(:); dt3 = t3(2)-t3(1);
-t4  = t4(:); u4  = u4(:); y4  = y4n(:); dt4 = t4(2)-t4(1);
+%%% IDENTIFICATION VIA IDENT
+nx      = 3;
+Hid     = n4sid(u,yn,nx,'Ts',Ts);
+%
+yid     = lsim(Hid,u,t);
+Gid     = freqresp(Hid,w);
 
-%%% >> IDENTIFICATION VIA IDENT
-systemIdentification
+%%% IDENTIFICATION VIA LOEWNER
+[f,U0,Y0,G0]    = insapack.non_param_freq(u,yn,Ts);
+puls            = 2*pi*f(f<FBND(end)/2);
+wRange          = 1:floor(length(puls)/2)*2;
+puls            = 2*pi*f(wRange);
+G0              = G0(wRange);
+%
+[la,mu,W,V,R,L] = insapack.data2loewner(puls,G0);
+opt             = [];
+opt.target      = nx;
+[hr,info]       = lf.loewner_tng(la,mu,W,V,R,L,opt);
+%
+Hloe            = dss(info.Ar,info.Br,info.Cr,info.Dr,info.Er);
+Hloe            = stabsep(Hloe);
+yloe            = lsim(Hloe,u,t);
+Gloe            = freqresp(Hloe,w);
 
-% %%% >> IDENTIFICATION VIA HANKEL (JUST FOR FUN)
-% load('signals')
-% tt = t3(:); uu = u3(:); yy = y3(:); dt = tt(2)-tt(1);
-% r       = [];
-% Hr      = insa.pencil(uu,yy,dt,r);
-% Hr      = stabsep(Hr);
-% Hr      = minreal(Hr);
-% Hr      = d2c(Hr,'zoh');
-% size(Hr)
-% % Time-domain simulation
-% tt2     = 0:.1:10;
-% uu2     = 1+.1*randn(length(tt2),1);
-% [yg,tg] = lsim(G,uu2,tt2);
-% [ys,ts] = lsim(Hr,uu2,tt2);
-% 
-% W = logspace(-2,2,200);
-% figure, 
-% subplot(221); hold on, axis tight
-% plot(tg,yg,'-')
-% plot(ts,ys,'--')
-% xlabel('Time [s]'); ylabel('Amplitude [.]');
-% legend({'Original model','Identified model'},'Location','Best')
-% subplot(223); hold on, axis tight
-% bodemag(G,'-',Hr,'r--')
-% legend({'Original model','Identified model'},'Location','Best')
-% %mdspack.bodemag(G,W,'LineWidth',3)
-% %mdspack.bodemag(Hr,W,'--','LineWidth',3)
-% subplot(2,2,[2 4]); hold on, grid on
-% eigG    = eig(G);
-% eigHr   = eig(Hr);
-% plot(real(eigG),imag(eigG),'o')
-% plot(real(eigHr),imag(eigHr),'.')
-% xlabel('Real'); ylabel('Imag.');
-% legend({'Original model','Identified model'},'Location','Best')
-
+%%
+%%% CHECK
+figure, 
+subplot(221); hold on, grid on, axis tight
+plot(t,ytrue,'-','DisplayName','$G$')
+plot(t,yid,'--','DisplayName','$H_{n4sid}$')
+plot(t,yloe,'--','DisplayName','$H_{loe}$')
+%plot(t,yn,':','DisplayName','$y_G(kT_s)+n$')
+legend('show'), set(gca,'YLim',[min(ytrue) max(ytrue)])
+title('Data vs. model')
+%
+subplot(222); hold on, grid on, axis tight
+plot(w,20*log10(abs(Gtrue(:))),'-','DisplayName','$G(\imath\omega)$')
+plot(w,20*log10(abs(Gid(:))),'--','DisplayName','$H_{n4sid}(\imath\omega)$')
+plot(w,20*log10(abs(Gloe(:))),'--','DisplayName','$H_{loe}(\imath\omega)$')
+plot(puls,20*log10(abs(G0(:))),':','DisplayName','$\hat G(\imath\omega)$')
+set(gca,'XScale','log')
+legend('show','Location','best')
+title(['Bode gain (Nyquist, $' num2str(2*pi*1/Ts) '$)'])
+subplot(224); hold on, grid on, axis tight
+plot(w,angle(Gtrue(:)),'-','DisplayName','$G(\imath\omega)$')
+plot(w,angle(Gid(:)),'--','DisplayName','$H_{n4sid}(\imath\omega)$')
+plot(w,angle(Gloe(:)),'--','DisplayName','$H_{loe}(\imath\omega)$')
+plot(puls,angle(G0(:)),':','DisplayName','$\hat G(\imath\omega)$')
+set(gca,'XScale','log')
+legend('show','Location','best')
+title(['Bode phase (Nyquist, $' num2str(2*pi*1/Ts) '$)'])
 

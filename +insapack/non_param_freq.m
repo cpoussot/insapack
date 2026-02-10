@@ -35,7 +35,7 @@ rho     = sigUY2./(sqrt(sigU2).*sqrt(sigY2));
 % >> FR
 % Smoothing the empirical transfer function estimate over successive realizations
 %G0  = Y0./U0; % Noob mode
-G0  = sum((Y.*conj(U)),2)./sum((U.^2),2);
+G0  = sum((Y.*conj(U)),2)./sum(U.*conj(U),2);
 % >> Bias estimation
 b   = -G0.*exp(-P*abs(U0).^2./sigU2) .* ... 
       ( 1-rho.*(U0./sqrt(sigU2)) ./ (Y0./sqrt(sigY2)) );
