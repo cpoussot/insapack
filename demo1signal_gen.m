@@ -11,9 +11,6 @@
 % shot for it, but does not prevent for additional reading and thinking.
 % Among others, one can consider, the analysis of the frequency spectra,
 % the length, the applicability... of each input/output couples
-% 
-% Note
-% The script uses the "+insapack" matlab package.
 %
 clearvars, close all, clc
 set(groot,'DefaultFigurePosition', [300 100 1000 600]);
@@ -21,16 +18,27 @@ set(groot,'defaultlinelinewidth',2)
 set(groot,'defaultlinemarkersize',14)
 set(groot,'defaultaxesfontsize',18)
 list_factory = fieldnames(get(groot,'factory')); index_interpreter = find(contains(list_factory,'Interpreter')); for iloe1 = 1:length(index_interpreter); set(groot, strrep(list_factory{index_interpreter(iloe1)},'factory','default'),'latex'); end
-clear all, close all, clc;
 
 %%% INSAPACK
-addpath('/Users/charles/Documents/GIT/insapack')
+%addpath('/Users/charles/Documents/GIT/insapack')
 
 %%% System to identify
+CAS = 3;
 disp('>> System')
-G       = tf([1 -2],[.1 .4 1])
-%G       = stabsep(rss(20,1,1));
-fmax    = 10*max(abs(eig(G)))/2/pi;
+switch CAS
+    case 1
+        G   = tf([1 -2],[.1 .4 1]);
+        Ns  = 2^10;
+    case 2
+        rng(1); 
+        G   = stabsep(rss(20,1,1));
+        Ns  = 2^10;
+    case 3
+        rng(2); 
+        G   = stabsep(rss(50,1,1));
+        Ns  = 2^13;
+end
+fmax    = 5*max(abs(eig(G)))/2/pi;
 Fs      = 2^(nextpow2(fmax)+1);
 Ts      = 1/Fs;
 disp('>> Noise model generator')
@@ -39,7 +47,6 @@ Gn      = tf(n,[1/100 1]);
 
 %%% PRBS CASE (constructs u1,y1,y1n)
 % Generate exciting signal
-Ns          = 2^10;
 FBND        = [0 Fs/4];
 REV         = false;
 SHOW        = true;
@@ -110,4 +117,4 @@ sig1.t = t1; sig1.u = u1.'; sig1.y = y1; sig1.yn = y1n; sig1.Ts = Ts;
 sig2.t = t2; sig2.u = u2.'; sig2.y = y2; sig2.yn = y2n; sig2.Ts = Ts; 
 sig3.t = t3; sig3.u = u3.'; sig3.y = y3; sig3.yn = y3n; sig3.Ts = Ts; 
 sig4.t = t4; sig4.u = u4.'; sig4.y = y4; sig4.yn = y4n; sig4.Ts = Ts; 
-save('signals','G','sig1','sig2','sig3','sig4','FBND')
+save(['signals_CAS' num2str(CAS)],'G','sig1','sig2','sig3','sig4','FBND')

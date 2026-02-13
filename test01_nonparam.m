@@ -1,10 +1,10 @@
-clc, clearvars, close all, 
-%
-set(groot,'DefaultFigurePosition', [200 100 1000 700]);
+clearvars, close all, clc
+set(groot,'DefaultFigurePosition', [300 100 1000 600]);
 set(groot,'defaultlinelinewidth',2)
-set(groot,'defaultlinemarkersize',4)
+set(groot,'defaultlinemarkersize',14)
 set(groot,'defaultaxesfontsize',18)
-list_factory = fieldnames(get(groot,'factory')); index_interpreter = find(contains(list_factory,'Interpreter')); for i = 1:length(index_interpreter); set(groot, strrep(list_factory{index_interpreter(i)},'factory','default'),'latex'); end;
+list_factory = fieldnames(get(groot,'factory')); index_interpreter = find(contains(list_factory,'Interpreter')); for iloe1 = 1:length(index_interpreter); set(groot, strrep(list_factory{index_interpreter(iloe1)},'factory','default'),'latex'); end
+clear all, close all, clc;
 %
 col     = colororder;
 % Signal
