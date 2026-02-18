@@ -107,8 +107,8 @@ info.uk     = u;
 info.mask   = mask;
 % Plot
 if SHOW 
-    FONT_SZ     = 16;
-    FONT_SZ2    = 14;
+    FONT_SZ     = 20;
+    FONT_SZ2    = 18;
     %
     figure, 
     subplot(211); hold on, grid on, axis tight
@@ -116,16 +116,16 @@ if SHOW
     set(gca,'TickLabelInterpreter','latex','FontSize',FONT_SZ2)
     xlabel('$t$ [s]','Interpreter','latex','FontSize',FONT_SZ), 
     ylabel('$\mathbf{u}(t)$','Interpreter','latex','FontSize',FONT_SZ)
-    legend({'Continuous-time'},'Location','East','Interpreter','latex','FontSize',FONT_SZ)
+    legend({'Continuous-time'},'Location','Best','Interpreter','latex','FontSize',FONT_SZ)
     %
     subplot(212); hold on; grid on, axis tight
-    plot(fc,abs(FTuc),'LineWidth',3),
+    plot(fc,abs(FTuc),'.','LineWidth',3),
     hh = gca;
     plot([1 1]*Fs/2,[hh.YLim(1) hh.YLim(2)],'k:','LineWidth',3), 
     set(gca,'TickLabelInterpreter','latex','FontSize',FONT_SZ2)
     xlabel('$f$ [Hz]','Interpreter','latex','FontSize',FONT_SZ), 
     ylabel('$\mathbf{U}(f)$','Interpreter','latex','FontSize',FONT_SZ)
-    legend({'Continuous-time (FFT)','Nyquist frequency'},'Location','East','Interpreter','latex','FontSize',FONT_SZ)
+    legend({'Continuous-time (FFT)','Nyquist frequency'},'Location','Best','Interpreter','latex','FontSize',FONT_SZ)
     %
     sgtitle(['Multisine signal $\{N_s,T_s,T_f\}=\{' num2str(Ns) ',' num2str(Ts)  ',' num2str(tc(end)) '\}$'],'Interpreter','latex','Fontsize',20)
 end

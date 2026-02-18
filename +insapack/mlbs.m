@@ -178,8 +178,8 @@ info.Ruu    = Ruu;
 info.D      = D;
 % 
 if SHOW
-    FONT_SZ     = 16;
-    FONT_SZ2    = 14;
+    FONT_SZ     = 20;
+    FONT_SZ2    = 18;
     %
     figure, 
     col = colororder;
@@ -220,7 +220,7 @@ if SHOW
     set(gca,'TickLabelInterpreter','latex','FontSize',FONT_SZ2)
     xlabel('$f$','Interpreter','latex','FontSize',FONT_SZ), 
     ylabel('$\mathbf{U}(f)$','Interpreter','latex','FontSize',FONT_SZ)
-    legend({'Continuous-time FFT','Zeros (mult. $kF_c$)'},'Location','NorthEast','Interpreter','latex','FontSize',FONT_SZ)
+    legend({'Continuous-time FFT','Zeros (mult. $kF_c$)'},'Location','Best','Interpreter','latex','FontSize',FONT_SZ)
     %
     sgtitle(['MLBS signal $\{D,N_c,T_c,T_s,T_f\}=\{' num2str(D) ',' num2str(Nc) ',' num2str(Tc)  ',' num2str(Ts)  ',' num2str(tc(end)) '\}$'],'Interpreter','latex','Fontsize',20)
 end
