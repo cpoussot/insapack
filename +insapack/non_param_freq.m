@@ -2,7 +2,7 @@ function [f,U0,Y0,G0,sigU2,sigY2,sigUY2,sigG2,b,rho] = non_param_freq(u,y,Ts)
 
 %%% Number of repeated periods of experiments
 [nt,Pu] = size(u);
-[nt,Py] = size(y);
+[~,Py]  = size(y);
 P       = max(Pu,Py); 
 % Treat the case where u or y is a vectors only
 if Pu == 1
