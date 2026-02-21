@@ -11,20 +11,24 @@
 % properties of this special and well known control method.
 % 
 % Note
-% The script uses the "+insa" matlab package.
+% The script uses the "+insapack" matlab package.
 % 
+clear all, close all, clc;
+set(groot,'DefaultFigurePosition', [300 100 1000 600]);
+set(groot,'defaultlinelinewidth',2)
+set(groot,'defaultlinemarkersize',14)
+set(groot,'defaultaxesfontsize',18)
+list_factory = fieldnames(get(groot,'factory')); index_interpreter = find(contains(list_factory,'Interpreter')); for iloe1 = 1:length(index_interpreter); set(groot, strrep(list_factory{index_interpreter(iloe1)},'factory','default'),'latex'); end
 
-clear all, close all, clc
-
-%%% >> Graphic settings
-insa.initGraphics
+%%% INSAPACK
+addpath('/Users/charles/Documents/GIT/insapack')
 
 %%% >> Chose a SISO model (2 cases are proposed)
 nom = 'tf4'
 %nom = 'random'
 switch lower(nom)
     case 'tf4'
-        Gs    = tf([1 9 6],conv([1/100 2*.1/10 1],[10 5 98 1]));
+        Gs    = tf([1 9 6],conv([1/100 2*.3/10 1],[10 5 1]));
         Gs_ss = ss(Gs);
     case 'random'
         Gs_ss = stabsep(rss(30));
@@ -33,14 +37,13 @@ end
 
 %%% >> LQ control with infinite horizon, u = -K*(x-x_ref)
 % Design parameters
-A   = Gs_ss.a;
-B   = Gs_ss.b;
-C   = Gs_ss.c;
-nu  = size(B,2);
-n   = length(A);
-R   = eye(nu); 
-rho = 1e3; % You may play with rho>0
-Q   = rho*eye(n);
+[A,B,C,D]   = ssdata(Gs_ss);
+n           = length(A);
+nu          = size(B,2);
+R           = eye(nu); 
+%
+rho     = 1e3; % You may play with rho>0
+Q       = rho*eye(n);
 % Continuous Algebraic Riccati Equation resolution ...
 [P,L,G] = care(A,B,Q,R);   % CARE
 % ... and controller construction
@@ -71,10 +74,11 @@ margin(Ls)
 legend('$L(\imath \omega)$','Location','Best')
 subplot(122), hold on
 nyquist(Ls,'b-'), grid on
-insa.circle([ 0,0],1,100,'g-'); 
-insa.circle([-1,0],1,100,'r--'); 
+theta = linspace(0,2*pi,1e3);
+plot(cos(theta),sin(theta),'g-'); 
+plot(cos(theta)-.5,sin(theta),'r--'); 
 legend('$L(\imath \omega)$','PM = $L(\imath \omega)$ crosses circle','$L(\imath \omega)$ outside circle','Location','Best'), axis equal
-% %% Step respo
+% %% Step response
 % figure, hold on
 % step(Gs,'b-')
 % step(CLs,'r-')
