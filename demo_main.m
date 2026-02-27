@@ -9,8 +9,8 @@ list_factory = fieldnames(get(groot,'factory')); index_interpreter = find(contai
 addpath('/Users/charles/Documents/GIT/insapack')
 col     = colororder;
 
-%%% System to identify
-CAS = 3;
+%%% System to identify (chose 1, 2 or 3)
+CAS = 1;
 switch CAS
     case 1
         G       = tf([1 -2],[.1 .4 1]); G = G/dcgain(G);
@@ -165,17 +165,17 @@ title('Bode phase')
 xlabel('Pulsation [rad/s]'), ylabel('Phase [rad]'),
 %%
 %%% Identification via N4SID
-% Hn4sid          = n4sid(u,mean(yn,2),nx,'Ts',Ts);
-% Hn4sid          = d2c(stabsep(ss(Hn4sid)),'tustin');
-% frHn4sid        = freqresp(Hn4sid,w);
-% eigHn4sid       = eig(Hn4sid);
+Hn4sid          = n4sid(u,mean(yn,2),nx,'Ts',Ts);
+Hn4sid_td       = d2c(stabsep(ss(Hn4sid)),'tustin');
+frHn4sid_td     = freqresp(Hn4sid_td,w);
+eigHn4sid_td    = eig(Hn4sid_td);
 
 %%% Identification via N4SID in frequency-domain
-data            = iddata(Y0,U0,Ts,'Frequency',w0)
-Hn4sid          = n4sid(data,nx);
-Hn4sid          = d2c(stabsep(ss(Hn4sid)),'tustin');
-frHn4sid        = freqresp(Hn4sid,w);
-eigHn4sid       = eig(Hn4sid);
+data            = iddata(Y0,U0,Ts,'Frequency',w0);
+Hn4sid_fd       = n4sid(data,nx);
+Hn4sid_fd       = d2c(stabsep(ss(Hn4sid_fd)),'tustin');
+frHn4sid_fd     = freqresp(Hn4sid_fd,w);
+eigHn4sid_fd    = eig(Hn4sid_fd);
 
 %%% Identification via Loewner
 wid             = 2*pi*f0(f0<FBND(end)/2);
@@ -192,19 +192,23 @@ eigHloe         = eig(Hloe);
 
 %%% Validation signal
 [uv,tv,infov]   = insapack.mlbs(Ns,Ts,FBND,REV,SHOW); uv = uv.'; tv = tv.';
+%[uv,tv,infov]   = insapack.chirp(Ns,Ts,FBND,REV,'linear',SHOW); uv = uv.'; tv = tv.';
 yv              = lsim(G,uv,tv);
-yn4sid          = lsim(Hn4sid,uv,tv);
+yn4sid_td       = lsim(Hn4sid_td,uv,tv);
+yn4sid_fd       = lsim(Hn4sid_fd,uv,tv);
 yloe            = lsim(Hloe,uv,tv);
 
 figure
 subplot(221); hold on, grid on, axis tight
 plot(tv,yv,'-','DisplayName','$\mathbf G$');
-plot(tv,yn4sid,'--','DisplayName','$\mathbf H_{n4sid}$');
+plot(tv,yn4sid_td,'--','DisplayName','$\mathbf H_{n4sid}$ (time-domain)');
+plot(tv,yn4sid_fd,'--','DisplayName','$\mathbf H_{n4sid}$ (freq.-domain)');
 plot(tv,yloe,'--','DisplayName','$\mathbf H_{loe}$');
 legend('show'), 
 subplot(223),hold on, grid on, axis equal
 plot(real(eigG),imag(eigG),'o','DisplayName','$\lambda(\mathbf G)$'), grid on, 
-plot(real(eigHn4sid),imag(eigHn4sid),'x','DisplayName','$\lambda(\mathbf H_{n4sid})$')
+plot(real(eigHn4sid_td),imag(eigHn4sid_td),'x','DisplayName','$\lambda(\mathbf H_{n4sid})$ (time-domain)')
+plot(real(eigHn4sid_fd),imag(eigHn4sid_fd),'x','DisplayName','$\lambda(\mathbf H_{n4sid})$ (freq.-domain)')
 plot(real(eigHloe),imag(eigHloe),'s','DisplayName','$\lambda(\mathbf H_{loe})$')
 plot(maxEig*cos(theta),maxEig*sin(theta),'k--','DisplayName','$|\lambda_{max}|$'),
 hh = gca;
@@ -213,24 +217,28 @@ legend('show','Location','best'),
 xlabel('Real'), ylabel('Imag.'), hold on
 subplot(222); hold on, grid on, axis tight
 plot(w,20*log10(abs(frG(:))),'-','DisplayName','$\mathbf G(\imath\omega)$')
-plot(w,20*log10(abs(frHn4sid(:))),'--','DisplayName','$\mathbf H_{n4sid}$')
+plot(w,20*log10(abs(frHn4sid_td(:))),'--','DisplayName','$\mathbf H_{n4sid}$ (time-domain)')
+plot(w,20*log10(abs(frHn4sid_fd(:))),'--','DisplayName','$\mathbf H_{n4sid}$ (freq.-domain)')
 plot(w,20*log10(abs(frHloe(:))),'--','DisplayName','$\mathbf H_{loe}$')
 set(gca,'XScale','log'), 
 legend('show','Location','best')
 title('Bode gain'), xlabel('Pulsation [rad/s]'), ylabel('Gain [dB]'),
 subplot(224); hold on, grid on, axis tight
 plot(w,angle(frG(:)),'-','DisplayName','$\mathbf G(\imath\omega)$')
-plot(w,angle(frHn4sid(:)),'--','DisplayName','$\mathbf H_{n4sid}$')
+plot(w,angle(frHn4sid_td(:)),'--','DisplayName','$\mathbf H_{n4sid}$ (time-domain)')
+plot(w,angle(frHn4sid_fd(:)),'--','DisplayName','$\mathbf H_{n4sid}$ (freq.-domain)')
 plot(w,angle(frHloe(:)),'--','DisplayName','$\mathbf H_{loe}$')
 set(gca,'XScale','log'), 
 legend('show','Location','best')
 title('Bode phase'), xlabel('Pulsation [rad/s]'), ylabel('Phase [rad]'),
 
 %%% Metrics
-N       = length(yv);
-En4sid  = 1/N*sum(abs(yv-yn4sid)/max(abs(yv)));
-Eloe    = 1/N*sum(abs(yv-yloe)/max(abs(yv)));
-sgtitle(sprintf('TD errors: $%0.2f$ (N2SID) / $%0.2f$ (LF)',En4sid,Eloe),'interpreter','latex','FontSize',20) 
+N           = length(yv);
+En4sid_td   = 1/N*sum(abs(yv-yn4sid_td)/max(abs(yv)));
+En4sid_fd   = 1/N*sum(abs(yv-yn4sid_fd)/max(abs(yv)));
+Eloe        = 1/N*sum(abs(yv-yloe)/max(abs(yv)));
+sgtitle(sprintf('TD errors: $%0.2f$ (N2SID-TD) /  $%0.2f$ (N2SID-FD) / $%0.2f$ (LF)',En4sid_td,En4sid_fd,Eloe),'interpreter','latex','FontSize',20) 
+
 % %%
 % figure, 
 % plot(info.sv,'-o'), grid on, axis tight
