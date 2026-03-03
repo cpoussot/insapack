@@ -2,7 +2,7 @@
 
 This page accompany the three lectures and five labs given at INSA Toulouse. The repository contains three folders:
 
-- `+insapack`: gathers MATLAB routines for (i) signals generation and (ii) identification (in the Foewner Framework);
+- `+insapack`: gathers MATLAB routines for (i) signals generation and (ii) identification (in the Loewner Framework);
 - `documents`: provides the main refenerences used to build this course;
 - `lectures`: gathers the lecture supports.
 
