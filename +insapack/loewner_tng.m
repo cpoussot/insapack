@@ -174,13 +174,15 @@ end
 
 %%% Compressed model
 % orders
-[L1,S1,~]   = svd([LL,SS],'econ','vector');
-[~,S2,R2]   = svd([SS',LL']','econ','vector');
+[L1,S1,~]   = svd([LL,SS],'econ');%,'vector');
+[~,S2,R2]   = svd([SS',LL']','econ');%,'vector');
+S1          = diag(S1);
 S           = S1;
 if numel(S2) < numel(S1)
     S = S2;
 end
-S_nu        = svd(LL,'econ','vector');
+S_nu        = svd(LL,'econ');%,'vector');
+S_nu        = diag(S_nu);
 sv          = S/S(1,1);
 sv_nu       = S_nu/S_nu(1,1);
 if isempty(robj) | isinf(robj)

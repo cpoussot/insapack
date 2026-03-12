@@ -165,7 +165,8 @@ title('Bode phase')
 xlabel('Pulsation [rad/s]'), ylabel('Phase [rad]'),
 %%
 %%% Identification via N4SID
-Hn4sid          = n4sid(u,mean(yn,2),nx,'Ts',Ts);
+data            = iddata(mean(yn,2),u,Ts);
+Hn4sid          = n4sid(data,nx,'Ts',Ts);
 Hn4sid_td       = d2c(stabsep(ss(Hn4sid)),'tustin');
 frHn4sid_td     = freqresp(Hn4sid_td,w);
 eigHn4sid_td    = eig(Hn4sid_td);
